@@ -31,7 +31,6 @@ setup(
     # https://packaging.python.org/guides/packaging-namespace-packages/#pkgutil-style-namespace-packages
     namespace_packages=["provreq"],
     packages=["provreq.mcmc", "provreq.mcmc.aggregators"],
-    package_data={"provreq.mcmc": ["static/*", "templates/*"]},
     url="https://github.com/mnemonic-no/provreq-mcmc",
     install_requires=[
         "caep",
