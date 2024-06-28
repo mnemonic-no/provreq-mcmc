@@ -40,7 +40,7 @@ setup(
         "requests",
         "tabulate",
     ],
-    python_requires=">=3.6, <4",
+    python_requires=">=3.8, <4",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Topic :: Utilities",
