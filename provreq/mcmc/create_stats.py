@@ -3,14 +3,14 @@ import json
 import sys
 from collections import defaultdict
 
-from provreq.tools import config
-
 from provreq.mcmc.mappings.mitre import remap
 from provreq.mcmc.reader.aepdatareader import AEPDataReader
 from provreq.mcmc.reader.datareader import DataReader
 from provreq.mcmc.reader.defirdatareader import DEFIRDataReader
 from provreq.mcmc.reader.mitresightingsreader import MITRESightingsReader
+from provreq.mcmc.reader.tiedatareader import TIEDataReader
 from provreq.mcmc.reader.u42datareader import U42PlaybookDataReader
+from provreq.tools import config
 
 
 def command_line_arguments() -> argparse.Namespace:
@@ -25,12 +25,19 @@ def command_line_arguments() -> argparse.Namespace:
     parser.add_argument("--aep-data", type=str, help="Files to generate probabilities")
 
     parser.add_argument(
+        "--tie-data",
+        type=str,
+        help="Technique Inference Engine (TIE) data file for probabilities",
+    )
+    parser.add_argument(
         "--u42-data",
         type=str,
-        help="U42 Playbook repo zip to generate probabilities."
-        + " Supports uri "
-        + "(e.g https://github.com/pan-unit42/playbook_viewer/archive/master.zip)"
-        + " and local file",
+        help=(
+            "U42 Playbook repo zip to generate probabilities."
+            " Supports uri "
+            "(e.g https://github.com/pan-unit42/playbook_viewer/archive/master.zip)"
+            " and local file"
+        ),
     )
 
     parser.add_argument(
@@ -84,6 +91,10 @@ def main() -> None:
         print("Reading DEFIR")
         reader: DataReader = DEFIRDataReader()
         data += reader.read(args.defir_data)
+    if args.tie_data:
+        print("Reading TIE")
+        reader = TIEDataReader()
+        data += reader.read(args.tie_data)
     if args.aep_data:
         print("Reading AEP")
         reader = AEPDataReader()
