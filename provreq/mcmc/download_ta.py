@@ -29,7 +29,7 @@ def slugify(value: str, allow_unicode: bool = False) -> str:
 d = data.Attampck()
 
 for g in d.iterate(matrices.ENTERPRISE, stixmap.GROUP):
-    res = {"agents": [], "tool_agents": []}
+    res: dict = {"agents": [], "tool_agents": []}
     for ref in d.enterprise_memorystore.relationships(
         g, source_only=True, relationship_type="uses"
     ):
@@ -42,9 +42,7 @@ for g in d.iterate(matrices.ENTERPRISE, stixmap.GROUP):
             ):
                 target_object = d.enterprise.get(tref.target_ref)
                 if target_object and target_object[0]["type"] == stixmap.TECHNIQUE:
-                    res["tool_agents"].append(
-                        data.resolve_mitre_id(target_object[0])
-                    )
+                    res["tool_agents"].append(data.resolve_mitre_id(target_object[0]))
     with open(slugify(g["name"]) + ".json", "w", encoding="utf-8") as f:
         print("Writing ", slugify(g["name"]) + ".json")
         f.write(json.dumps(res))

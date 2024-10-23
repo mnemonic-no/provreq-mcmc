@@ -1,15 +1,13 @@
 """MITRE Sightings data reader"""
 
 import json
-from glob import glob
-from pathlib import Path
 from typing import Dict, Iterator, List, Text
 
 from provreq.mcmc.reader import datareader
 
 
 class MITRESightingsReader(datareader.DataReader):
-    """Read a MITRE Sightings dump csv file of sighted agents"""
+    """Read a MITRE Sightings dump json file of sighted agents"""
 
     def iterate(self, filename: Text) -> Iterator[Dict[Text, List[Text]]]:
         """Iterate over a Sightings dump"""
