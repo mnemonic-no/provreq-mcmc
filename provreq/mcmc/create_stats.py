@@ -47,6 +47,13 @@ def command_line_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+        help="Turn on debug output",
+    )
+
+    parser.add_argument(
         "--print-defir",
         default=False,
         action="store_true",
@@ -86,27 +93,45 @@ def main() -> None:
         sys.stderr.write("missing provreq-, u42- and/or defir- data\n")
         sys.exit(1)
 
-    data = []
+    data: list = []
     if args.defir_data:
         print("Reading DEFIR")
         reader: DataReader = DEFIRDataReader()
+        n = len(data)
         data += reader.read(args.defir_data)
+        print(len(data) - n, "new entries")
     if args.tie_data:
         print("Reading TIE")
         reader = TIEDataReader()
+        n = len(data)
         data += reader.read(args.tie_data)
+        print(len(data) - n, "new entries")
     if args.aep_data:
         print("Reading AEP")
         reader = AEPDataReader()
+        n = len(data)
         data += reader.read(args.aep_data)
+        print(len(data) - n, "new entries")
     if args.u42_data:
+        print("Reading u42 data")
         reader = U42PlaybookDataReader()
+        n = len(data)
         data += reader.read(args.u42_data)
+        print(len(data) - n, "new entries")
     if args.mitresightingsdump:
+        print("Reading MITRESightings")
         reader = MITRESightingsReader()
+        n = len(data)
         data += reader.read(args.mitresightingsdump)
+        print(len(data) - n, "new entries")
+
+    if args.debug:
+        print("read agent promises", args.data_dir, args.agent_promises)
 
     agents, _, _ = config.read_agent_promises(args)
+
+    if args.debug:
+        print("done reading agent promises")
 
     if args.focus not in ["require", "provide"]:
         print("Focus must be either require or provide")
@@ -117,30 +142,49 @@ def main() -> None:
     missing = set()
     if args.focus == "require":
         for bundle in data:
-            print(bundle)
+            # print(bundle)
+            if args.debug:
+                print("bundle:", type(bundle))
             for _, tech_list in bundle.items():
+                if args.debug:
+                    print("Len tech_list", len(tech_list))
                 list_reqs = set()
+
                 for tech in tech_list:
                     tech = remap.get(tech, tech)
                     if not tech:
                         continue
                     if tech not in agents:
                         missing.add(tech)
+                        if args.debug:
+                            print("DEBUG: missing", tech)
                         continue
                     for req in agents[tech]["requires"]:
+                        if args.debug:
+                            print("Adding list_reqs", tech, req)
                         list_reqs.add(req)
+
+                if args.debug:
+                    print("len list_reqs", len(list_reqs))
+                    print("len tech_list", len(tech_list))
 
                 for pos_tech in tech_list:
                     pos_tech = remap.get(pos_tech, pos_tech)
                     if not pos_tech:
+                        if args.debug:
+                            print("Continue due to pos_tech", pos_tech)
                         continue
                     if pos_tech not in agents:
                         missing.add(pos_tech)
+                        if args.debug:
+                            print("Continue due missing pos_tech", pos_tech)
                         continue
                     for req in list_reqs:
                         if req in agents[pos_tech]["provides"]:
                             if req not in output:
                                 output[req] = defaultdict(int)
+                            if args.debug:
+                                print("Adding output for req, pos_tech", req, pos_tech)
                             output[req][pos_tech] += 1
 
         if args.print_defir:

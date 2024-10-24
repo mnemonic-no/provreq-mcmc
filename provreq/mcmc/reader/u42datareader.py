@@ -6,10 +6,9 @@ from typing import IO, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 import requests
 import stix2.exceptions
+from provreq.mcmc.reader import datareader
 from stix2 import parse
 from stix2.v20.bundle import Bundle
-
-from provreq.mcmc.reader import datareader
 
 
 def file_zip(filename: str) -> Iterator[Tuple[str, IO[bytes]]]:
