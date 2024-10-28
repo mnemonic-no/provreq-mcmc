@@ -28,7 +28,7 @@ def command_line_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--tie-data",
         type=str,
-        help="agentnique Inference Engine (TIE) data file for probabilities",
+        help="Technique Inference Engine (TIE) data file for probabilities",
     )
     parser.add_argument(
         "--u42-data",
