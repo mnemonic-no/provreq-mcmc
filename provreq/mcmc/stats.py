@@ -8,8 +8,8 @@ import tabulate
 from provreq.tools import config
 
 from provreq.mcmc.mappings.mitre import remap
-from provreq.mcmc.reader.provreqdatareader import AEPDataReader
 from provreq.mcmc.reader.defirdatareader import DEFIRDataReader
+from provreq.mcmc.reader.provreqdatareader import AEPDataReader
 
 
 def command_line_arguments() -> argparse.Namespace:
@@ -19,7 +19,7 @@ def command_line_arguments() -> argparse.Namespace:
 
     parser.add_argument("--defir", type=str, help="Defir data bundle")
 
-    parser.add_argument("--agents", type=str, help="AEP Techniques")
+    parser.add_argument("--agents", type=str, help="AEP agentniques")
 
     parser.add_argument("--provreq-bundle-dir", type=str, help="AEP bundles")
     parser.add_argument(
@@ -42,7 +42,7 @@ def main() -> None:
     agents, _, _ = config.read_agent_promises(args)
 
     tactics = defaultdict(list)
-    bundletech = []
+    bundleagent = []
 
     data = None
     if args.defir:
@@ -58,18 +58,18 @@ def main() -> None:
     for bundle in data:
         for bundle_name, bundle_agents in bundle.items():
             bundle_tactics: dict = Counter()
-            for tech in bundle_agents:
-                tech = remap.get(tech, tech)
-                if not tech:
+            for agent in bundle_agents:
+                agent = remap.get(agent, agent)
+                if not agent:
                     continue
-                for tactic in agents[tech]["tactic"]:
+                for tactic in agents[agent]["tactic"]:
                     bundle_tactics[tactic] += 1
             for tactic, count in bundle_tactics.items():
                 tactics[tactic].append(count)
-            bundletech.append(len(bundle_agents))
+            bundleagent.append(len(bundle_agents))
 
     # print(tactics)
-    # print(bundletech)
+    # print(bundleagent)
     rows = []
     for key, values in tactics.items():
         rows.append([key, statistics.mean(values), statistics.pstdev(values)])
@@ -86,7 +86,7 @@ def main() -> None:
 
     print(
         tabulate.tabulate(
-            [["n", statistics.mean(bundletech), statistics.pstdev(bundletech)]],
+            [["n", statistics.mean(bundleagent), statistics.pstdev(bundleagent)]],
             headers=["", "mean", "pstdev"],
             tablefmt=args.format,
             floatfmt=".02f",

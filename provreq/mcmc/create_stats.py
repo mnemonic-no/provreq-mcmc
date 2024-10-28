@@ -3,6 +3,8 @@ import json
 import sys
 from collections import defaultdict
 
+from provreq.tools import config
+
 from provreq.mcmc.mappings.mitre import remap
 from provreq.mcmc.reader.aepdatareader import AEPDataReader
 from provreq.mcmc.reader.datareader import DataReader
@@ -10,7 +12,6 @@ from provreq.mcmc.reader.defirdatareader import DEFIRDataReader
 from provreq.mcmc.reader.mitresightingsreader import MITRESightingsReader
 from provreq.mcmc.reader.tiedatareader import TIEDataReader
 from provreq.mcmc.reader.u42datareader import U42PlaybookDataReader
-from provreq.tools import config
 
 
 def command_line_arguments() -> argparse.Namespace:
@@ -27,7 +28,7 @@ def command_line_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--tie-data",
         type=str,
-        help="Technique Inference Engine (TIE) data file for probabilities",
+        help="agentnique Inference Engine (TIE) data file for probabilities",
     )
     parser.add_argument(
         "--u42-data",
@@ -145,47 +146,49 @@ def main() -> None:
             # print(bundle)
             if args.debug:
                 print("bundle:", type(bundle))
-            for _, tech_list in bundle.items():
+            for _, agent_list in bundle.items():
                 if args.debug:
-                    print("Len tech_list", len(tech_list))
+                    print("Len agent_list", len(agent_list))
                 list_reqs = set()
 
-                for tech in tech_list:
-                    tech = remap.get(tech, tech)
-                    if not tech:
+                for agent in agent_list:
+                    agent = remap.get(agent, agent)
+                    if not agent:
                         continue
-                    if tech not in agents:
-                        missing.add(tech)
+                    if agent not in agents:
+                        missing.add(agent)
                         if args.debug:
-                            print("DEBUG: missing", tech)
+                            print("DEBUG: missing", agent)
                         continue
-                    for req in agents[tech]["requires"]:
+                    for req in agents[agent]["requires"]:
                         if args.debug:
-                            print("Adding list_reqs", tech, req)
+                            print("Adding list_reqs", agent, req)
                         list_reqs.add(req)
 
                 if args.debug:
                     print("len list_reqs", len(list_reqs))
-                    print("len tech_list", len(tech_list))
+                    print("len agent_list", len(agent_list))
 
-                for pos_tech in tech_list:
-                    pos_tech = remap.get(pos_tech, pos_tech)
-                    if not pos_tech:
+                for pos_agent in agent_list:
+                    pos_agent = remap.get(pos_agent, pos_agent)
+                    if not pos_agent:
                         if args.debug:
-                            print("Continue due to pos_tech", pos_tech)
+                            print("Continue due to pos_agent", pos_agent)
                         continue
-                    if pos_tech not in agents:
-                        missing.add(pos_tech)
+                    if pos_agent not in agents:
+                        missing.add(pos_agent)
                         if args.debug:
-                            print("Continue due missing pos_tech", pos_tech)
+                            print("Continue due missing pos_agent", pos_agent)
                         continue
                     for req in list_reqs:
-                        if req in agents[pos_tech]["provides"]:
+                        if req in agents[pos_agent]["provides"]:
                             if req not in output:
                                 output[req] = defaultdict(int)
                             if args.debug:
-                                print("Adding output for req, pos_tech", req, pos_tech)
-                            output[req][pos_tech] += 1
+                                print(
+                                    "Adding output for req, pos_agent", req, pos_agent
+                                )
+                            output[req][pos_agent] += 1
 
         if args.print_defir:
             from pprint import pprint
@@ -193,8 +196,8 @@ def main() -> None:
             pprint(data)
             for req in output:
                 print(f"requirement: {req} provided by:")
-                for tech, count in output[req].items():
-                    print(f"\t{tech}: [{agents[tech]['name']}] : {count} times")
+                for agent, count in output[req].items():
+                    print(f"\t{agent}: [{agents[agent]['name']}] : {count} times")
                 print("--")
             sys.exit()
 
@@ -202,8 +205,8 @@ def main() -> None:
         sys.stderr.write("writing %s\n" % args.output)
         f.write(json.dumps(output))
     # if args.focus == "provide":
-    # for tech_list in data.values():
-    # for tech in tech_list:
+    # for agent_list in data.values():
+    # for agent in agent_list:
 
 
 if __name__ == "__main__":

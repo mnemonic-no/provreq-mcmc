@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import random
-import re
 import signal
 import sys
 import types
@@ -119,11 +118,9 @@ def command_line_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--assume-recon-and-resource-development",
-        action="store_true",
-        help=(
-            "Pre-seed all the agents that would be considered previous to an observable attack chain"
-        ),
+        "--seed-class",
+        type=config.split_arg,
+        help=("Populate seed agent list with all agents of one (or more) classes"),
     )
 
     args: argparse.Namespace = config.handle_args(parser, "generate")
@@ -132,14 +129,14 @@ def command_line_arguments() -> argparse.Namespace:
 
 
 def sample_agent(
-    tech: Text,
+    agent: Text,
     agents: Dict[Text, Dict],
     expanded_stats: Dict[Text, List[Text]],
     allready_provided: Optional[set] = None,
 ) -> List[Text]:
     """Select agents that provides all requires of the agent based on probability"""
 
-    to_fullfill = set(agents[tech]["requires"])
+    to_fullfill = set(agents[agent]["requires"])
     if allready_provided:
         to_fullfill -= allready_provided
 
@@ -149,17 +146,17 @@ def sample_agent(
         if prom not in expanded_stats:
             # logging.warning("Promises never seen in stats %s", prom)
             return []
-        randtech = random.choice(expanded_stats[prom])
-        if randtech not in agents:
+        randagent = random.choice(expanded_stats[prom])
+        if randagent not in agents:
             logging.warning(
                 "Non existing agent '%s' sampled for '%s' ignore and re-draw",
-                randtech,
-                tech,
+                randagent,
+                agent,
             )
             to_fullfill.add(prom)
             continue
-        res.append(randtech)
-        for prov in agents[randtech]["provides"]:
+        res.append(randagent)
+        for prov in agents[randagent]["provides"]:
             to_fullfill.discard(prov)
 
     return res
@@ -172,8 +169,8 @@ def expand_stats_list(stats: Dict[Text, Dict[Text, int]]) -> Dict[Text, List[Tex
     res = {}
     for prom, st in stats.items():
         exp = []
-        for tech, count in st.items():
-            exp += [tech] * count
+        for agent, count in st.items():
+            exp += [agent] * count
         res[prom] = exp
 
     return res
@@ -194,68 +191,68 @@ def montecarlo(
     # populate a set of requirements allready provided by the tecnique(s) in base
     allready_provides = seeds
 
-    for tech in base:
-        for prov in agents[tech]["provides"]:
+    for agent in base:
+        for prov in agents[agent]["provides"]:
             allready_provides.add(prov)
 
     res = set(base)
 
     while base:
-        new_tech = set()
-        for tech in base:
-            sample = sample_agent(tech, agents, exp_stats, allready_provides)
+        new_agent = set()
+        for agent in base:
+            sample = sample_agent(agent, agents, exp_stats, allready_provides)
 
-            for sample_tech in sample:
-                allready_provides.update(agents[sample_tech]["provides"])
+            for agent in sample:
+                allready_provides.update(agents[agent]["provides"])
 
-            new_tech.update(sample)
+            new_agent.update(sample)
 
-        res.update(new_tech)
+        res.update(new_agent)
 
-        for tech in new_tech:
-            allready_provides.update(agents[tech]["provides"])
+        for agent in new_agent:
+            allready_provides.update(agents[agent]["provides"])
 
         all_requirements_provided = True
-        for tech in res:
-            if not set(agents[tech]["requires"]).issubset(allready_provides):
+        for agent in res:
+            if not set(agents[agent]["requires"]).issubset(allready_provides):
                 all_requirements_provided = False
 
         if all_requirements_provided:
-            for tech in res:
-                if tech in stop_agents:
+            for agent in res:
+                if agent in stop_agents:
                     return res
 
-        if not new_tech:
-            for tech in res:
-                for req in agents[tech]["requires"]:
+        if not new_agent:
+            for agent in res:
+                for req in agents[agent]["requires"]:
                     if req not in allready_provides:
                         missing_counter[req] += 1
             return None
 
-        base = new_tech
+        base = new_agent
 
     return None  # Can't get here, the conditional returns are in the while loop above.
 
 
 def validates(
     seeds: List[Text],
-    tech_bundle: List[Text],
+    agent_bundle: List[Text],
     agents: Dict,
     system_conditions: List[Text],
 ) -> bool:
     """check if the simulation is valid"""
 
-    if not tech_bundle:
+    if not agent_bundle:
         return False
 
-    sim = simulate(seeds, tech_bundle, agents, system_conditions)
+    sim = simulate(seeds, agent_bundle, agents, system_conditions)
     if sim.backburner:
         return False
 
     return True
 
 
-def aggregate(techs: dict, strategy: str, data: Counter) -> Counter:
+def aggregate(agents: dict, strategy: str, data: Counter) -> Counter:
     """aggregate a result based on a strategy"""
 
     if not strategy:
@@ -269,7 +266,7 @@ def aggregate(techs: dict, strategy: str, data: Counter) -> Counter:
     if strategy not in strategies:
         raise ValueError(f"Unknown aggregation strategy: {strategy}")
 
-    return strategies[strategy](techs, data)  # type: ignore
+    return strategies[strategy](agents, data)  # type: ignore
 
 
 def main() -> None:
@@ -291,42 +288,39 @@ def main() -> None:
             stop_agents = args.stop_agents
         elif args.stop_agent_class:
             stop_agents = {
-                tech
-                for tech, data in agents.items()
+                agent
+                for agent, data in agents.items()
                 if args.stop_agent_class in data["agent_class"]
             }
         else:
             stop_agents = {
-                tech
-                for tech, data in agents.items()
+                agent
+                for agent, data in agents.items()
                 if "Initial Access" in data["agent_class"]
             }
 
         if args.pre_seed_stop_agent_requirements:
-            for tech in stop_agents:
+            for agent in stop_agents:
                 print(
-                    f"Adding {agents[tech]['requires']} to the pre seeding due to stop agent {tech}"
+                    f"Adding {agents[agent]['requires']} to the pre seeding due to stop agent {agent}"
                 )
-                args.seeds += agents[tech]["requires"]
+                args.seeds += agents[agent]["requires"]
             args.seeds = list(set(args.seeds))
 
-        if args.assume_recon_and_resource_development:
-            check = re.compile(r"^T\d{4}(\.\d+)?$")
-            rec_and_resource_dev = []
-            for tid, tech in agents.items():
-                if (
-                    "Resource Development" in tech["agent_class"]
-                    or "Reconnaissance" in tech["agent_class"]
+        if args.seed_class:
+            seed_agents = []
+            for tid, agent in agents.items():
+                if any(
+                    seed_class in agent["agent_class"] for seed_class in args.seed_class
                 ):
-                    if check.match(tid):
-                        print(f"Using {tid}")
-                        rec_and_resource_dev += tech["provides"]
-                    else:
-                        print(f"Skipping {tid}")
+                    seed_agents += agent["provides"]
             print(
-                f"Pre-seeding with {set(rec_and_resource_dev)} from Reconnaissance and Resource Development agent_classs."
+                (
+                    f"Pre-seeding with {set(seed_agents)} from {', '.join(args.seed_class)} "
+                    f"agent class{'es' if len(args.seed_class) > 1 else ''}."
+                )
             )
-            args.seeds = list(set(args.seeds + rec_and_resource_dev))
+            args.seeds = list(set(args.seeds + seed_agents))
 
         ignore_choke = stop_agents.union(set(args.agents))
 
@@ -394,7 +388,7 @@ def main() -> None:
         print(f"Total number of potensial 'paths': {len(c)}")
         print(f"Top {args.top}")
         for res in c.most_common(args.top):
-            print(f"{round(res[1]/n * 10000)/100}% (n={res[1]})")
+            print(f"{round(res[1] / n * 10000) / 100}% (n={res[1]})")
             sim = simulate(args.seeds, set(res[0]), agents, [])
 
             print(
@@ -413,8 +407,8 @@ def find_choke_points(sims: Counter, agents: Dict, ignore: Set) -> Counter:
 
     c: Counter = Counter()
     for sim, n in sims.items():
-        for tech in sim:
-            if tech.startswith("T") and tech not in ignore:
-                c[f"{tech}: {agents[tech]['name']}"] += 1
+        for agent in sim:
+            if agent.startswith("T") and agent not in ignore:
+                c[f"{agent}: {agents[agent]['name']}"] += 1
 
     return c
