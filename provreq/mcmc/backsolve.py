@@ -16,9 +16,7 @@ def command_line_arguments() -> argparse.Namespace:
         "-s", "--stats", type=str, default="stats.json", help="stats data"
     )
 
-    parser.add_argument(
-        "--techs", type=config.split_arg, help="Techniuqes to backsolve"
-    )
+    parser.add_argument("--agents", type=config.split_arg, help="Agents to backsolve")
 
     args: argparse.Namespace = config.handle_args(parser, "generate")
 
@@ -31,23 +29,23 @@ def backsolve(
     """find possible new set of agents"""
 
     reqs = set()
-    for tech in base:
-        for req in agents[tech]["requires"]:
+    for agent in base:
+        for req in agents[agent]["requires"]:
             reqs.add(req)
 
     new_set = set()
     for req in reqs:
-        max_tech = "NA"
+        max_agent = "NA"
         max_count = 0
         if req not in stats:
             print("can't find stats for requirement", req)
             continue
-        for techID, count in stats[req].items():
+        for agentID, count in stats[req].items():
             if count > max_count:
-                max_tech = techID
+                max_agent = agentID
                 max_count = count
-        if max_tech != "NA":
-            new_set.add(max_tech)
+        if max_agent != "NA":
+            new_set.add(max_agent)
 
     return new_set
 
@@ -62,19 +60,19 @@ def main() -> None:
 
         agents, _, _ = config.read_agent_promises(args)
 
-        new_techs: set = set(args.techs)
-        base_techs = set(args.techs)
+        new_agents: set = set(args.agents)
+        base_agents = set(args.agents)
 
         while True:
-            base_techs.update(new_techs)
+            base_agents.update(new_agents)
 
-            new_set = backsolve(stats, agents, base_techs)
+            new_set = backsolve(stats, agents, base_agents)
 
-            for tech in new_set.difference(base_techs):
-                print(f"{tech} - {agents[tech]['name']}")
+            for agent in new_set.difference(base_agents):
+                print(f"{agent} - {agents[agent]['name']}")
 
-            new_techs.update(new_set)
+            new_agents.update(new_set)
 
-            if not new_techs.difference(base_techs):
+            if not new_agents.difference(base_agents):
                 break
             print("---")

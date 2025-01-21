@@ -14,9 +14,9 @@ def _agents_from_element(element):
     agents = element["agents"]
     agents = json.loads(agents.replace("'", '"'))
 
-    techIDs = [tech.rsplit(" ", 1)[1] for tech in agents]
+    agentIDs = [agent.rsplit(" ", 1)[1] for agent in agents]
 
-    return {incident: techIDs}
+    return {incident: agentIDs}
 
 
 class DEFIRDataReader(datareader.DataReader):

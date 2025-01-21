@@ -1,6 +1,6 @@
 # provreq-mcmc
 
-This is an extension to the base AEP project, attempting to find the most likely path to one or more techniques using markov chain montecarlo simulations.
+This is an extension to the base provreq project, attempting to find the most likely path to one or more techniques using markov chain montecarlo simulations.
 
 Use case is "you have observed X; how did this happen?"
 
@@ -32,7 +32,7 @@ provreq-mcmc-create-stats --data-dir ~/src/provreq-data/data --provreq-data ~/sr
 #### Example for "Lateral Tool Transfer"
 
 ```bash
-[~] provreq-mcmc-montecarlo --top 3 --assume-recon-and-resource-development -a children --seeds waterhole --agents T1570 --data-dir ~/src/aep/data --promise-descriptions ~/src/aep/data/promise_descriptions.csv -s /tmp/stats.json
+[~] provreq-mcmc-montecarlo --top 3 --seed-class "Resource Development,Reconnaissance" -a children --seeds waterhole --agents T1570 --data-dir ~/src/provreq/data --promise-descriptions ~/src/provreq/data/promise_descriptions.csv -s /tmp/stats.json
 Using T1583
 Using T1584
 Using T1585
