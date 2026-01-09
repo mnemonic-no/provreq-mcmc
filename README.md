@@ -24,7 +24,7 @@ python3 -m pip install -e .
 ### Create the stats file
 
 ```bash
-provreq-mcmc-create-stats --data-dir ~/src/aep/data --provreq-data ~/src/aep/data/threatactors/ --u42-data ~/src/provreq-mcmc-data/master.zip -o ~/src/provreq-mcmc-data/stats.json
+provreq-mcmc-create-stats --data-dir ~/src/aep/data --aep-data ~/src/aep/data/threatactors/ --u42-data ~/src/provreq-mcmc-data/master.zip -o ~/src/provreq-mcmc-data/stats.json
 ```
 
 ### Run the tool searching for paths to technique
