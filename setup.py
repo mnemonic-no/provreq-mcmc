@@ -34,7 +34,7 @@ setup(
     url="https://github.com/mnemonic-no/provreq-mcmc",
     install_requires=[
         "caep",
-        "provreq>=0.1.4",
+        "provreq>=0.1.6",
         "tabulate",
         "stix2",
         "requests",
