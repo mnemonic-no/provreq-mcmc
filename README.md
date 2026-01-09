@@ -14,7 +14,7 @@ Currently in active development and should be installed from the github reposito
 mkdir src; cd src
 mkdir provreq-mcmc-data; cd provreq-mcmc-data; wget https://github.com/pan-unit42/playbook_viewer/archive/master.zip; cd ..
 git clone https://github.com/mnemonic-no/provreq-mcmc.git
-git clone https://github.com/mnemonic-no/provreq-data.git
+git clone https://github.com/mnemonic-no/aep.git
 cd provreq-mcmc
 python3 -m pip install -e .
 ```
