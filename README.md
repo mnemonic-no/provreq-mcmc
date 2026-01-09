@@ -24,7 +24,7 @@ python3 -m pip install -e .
 ### Create the stats file
 
 ```bash
-provreq-mcmc-create-stats --data-dir ~/src/provreq-data/data --provreq-data ~/src/provreq-data/data/threatactors/ --u42-data ~/src/provreq-mcmc-data/master.zip -o ~/src/provreq-mcmc-data/stats.json
+provreq-mcmc-create-stats --data-dir ~/src/aep/data --provreq-data ~/src/aep/data/threatactors/ --u42-data ~/src/provreq-mcmc-data/master.zip -o ~/src/provreq-mcmc-data/stats.json
 ```
 
 ### Run the tool searching for paths to technique
@@ -32,7 +32,7 @@ provreq-mcmc-create-stats --data-dir ~/src/provreq-data/data --provreq-data ~/sr
 #### Example for "Lateral Tool Transfer"
 
 ```bash
-[~] provreq-mcmc-montecarlo --top 3 --seed-class "Resource Development,Reconnaissance" -a children --seeds waterhole --agents T1570 --data-dir ~/src/provreq/data --promise-descriptions ~/src/provreq/data/promise_descriptions.csv -s /tmp/stats.json
+[~] provreq-mcmc-montecarlo --top 3 --seed-class "Resource Development,Reconnaissance" -a children --seeds waterhole --agents T1570 --data-dir ~/src/aep/data --promise-descriptions ~/src/aep/data/promise_descriptions.csv -s ~/src/provreq-mcmc-data/stats.json
 Using T1583
 Using T1584
 Using T1585
